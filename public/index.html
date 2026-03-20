@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>📦 Order Management System</h1>
+            <p class="subtitle">Event-Driven Microservices with Kafka</p>
+        </header>
+
+        <main>
+            <!-- Order Creation Form -->
+            <section class="form-section">
+                <div class="card">
+                    <h2>Create New Order</h2>
+                    <form id="orderForm">
+                        <div class="form-group">
+                            <label for="orderId">Order ID:</label>
+                            <input type="text" id="orderId" name="orderId" placeholder="e.g., ORD-001" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="item">Item Name:</label>
+                            <input type="text" id="item" name="item" placeholder="e.g., Laptop" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="quantity">Quantity:</label>
+                            <input type="number" id="quantity" name="quantity" placeholder="e.g., 5" min="1" required>
+                        </div>
+
+                        <button type="submit" class="btn-submit">
+                            <span id="submitText">Create Order</span>
+                            <span id="spinner" class="spinner" style="display:none;"></span>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Response Section -->
+            <section class="response-section">
+                <div class="card">
+                    <h2>Response</h2>
+                    <div id="responseContainer" class="response-container">
+                        <p class="placeholder-text">Orders will be displayed here...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- System Status -->
+            <section class="status-section">
+                <div class="card">
+                    <h2>System Status</h2>
+                    <div id="statusContainer" class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Gateway:</span>
+                            <span id="gatewayStatus" class="status-badge pending">Checking...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">API Endpoint:</span>
+                            <span id="apiStatus" class="status-text">Configured</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 Event-Driven Microservices Lab | Built with Spring Boot + Kafka + Azure</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
