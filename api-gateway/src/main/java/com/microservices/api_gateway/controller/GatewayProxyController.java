@@ -1,5 +1,6 @@
 package com.microservices.api_gateway.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -10,8 +11,18 @@ import org.springframework.web.client.RestTemplate;
 @RestController
 public class GatewayProxyController {
 
-    private final String ORDER_SERVICE_URL = "http://localhost:8081/orders";
     private final RestTemplate restTemplate = new RestTemplate();
+
+    @Value("${order.service.base-url:http://localhost:8081}")
+    private String orderServiceBaseUrl;
+
+    private String orderServiceOrdersUrl() {
+        String base = orderServiceBaseUrl.trim();
+        if (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+        return base + "/orders";
+    }
 
     @GetMapping("/health")
     public ResponseEntity<String> health() {
@@ -20,11 +31,11 @@ public class GatewayProxyController {
 
     @PostMapping("/orders")
     public ResponseEntity<String> createOrder(@RequestBody String order) {
-        return restTemplate.postForEntity(ORDER_SERVICE_URL, order, String.class);
+        return restTemplate.postForEntity(orderServiceOrdersUrl(), order, String.class);
     }
 
     @GetMapping("/orders")
     public ResponseEntity<String> getOrders() {
-        return restTemplate.getForEntity(ORDER_SERVICE_URL, String.class);
+        return restTemplate.getForEntity(orderServiceOrdersUrl(), String.class);
     }
 }
