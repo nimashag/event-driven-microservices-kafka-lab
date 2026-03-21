@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Microservices Gateway Dashboard</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #111a2e;
+      --panel-soft: #16213b;
+      --text: #e9eefc;
+      --muted: #a9b6d3;
+      --ok: #25c26e;
+      --warn: #f2b84b;
+      --err: #ef4444;
+      --accent: #56a4ff;
+      --border: #263454;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background:
+        radial-gradient(900px 380px at 10% -10%, #1d2f55 0%, transparent 60%),
+        radial-gradient(900px 380px at 90% 110%, #1d2f55 0%, transparent 60%),
+        var(--bg);
+      color: var(--text);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(860px, 100%);
+      background: linear-gradient(180deg, var(--panel), var(--panel-soft));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+      line-height: 1.2;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .grid {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .value {
+      word-break: break-all;
+      font-size: 0.96rem;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--warn);
+    }
+
+    .ok .dot { background: var(--ok); }
+    .err .dot { background: var(--err); }
+
+    .actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #062148;
+      background: linear-gradient(180deg, #8ec6ff, var(--accent));
+    }
+
+    button.secondary {
+      color: var(--text);
+      background: transparent;
+      border: 1px solid var(--border);
+    }
+
+    pre {
+      margin-top: 16px;
+      background: #091226;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      max-height: 220px;
+      overflow: auto;
+      color: #d4e1ff;
+      font-size: 0.88rem;
+    }
+
+    @media (max-width: 760px) {
+      .grid { grid-template-columns: 1fr; }
+      h1 { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Azure Microservices Lab Frontend</h1>
+    <p>
+      Simple static frontend deployed with Azure Static Web Apps.
+      This page checks your gateway health endpoint and shows response details.
+    </p>
+
+    <section class="grid">
+      <div class="box">
+        <div class="label">Gateway Base URL</div>
+        <div class="value" id="gatewayBase"></div>
+      </div>
+      <div class="box">
+        <div class="label">Health Endpoint</div>
+        <div class="value" id="healthUrl"></div>
+      </div>
+      <div class="box">
+        <div class="label">Current Status</div>
+        <div id="statusBadge" class="status">
+          <span class="dot"></span>
+          <span id="statusText">Not checked</span>
+        </div>
+      </div>
+      <div class="box">
+        <div class="label">Last Checked</div>
+        <div class="value" id="lastChecked">-</div>
+      </div>
+    </section>
+
+    <section class="actions">
+      <button id="checkBtn">Check Gateway Health</button>
+      <button id="copyBtn" class="secondary">Copy Health URL</button>
+    </section>
+
+    <pre id="resultBox">Run a health check to see API response.</pre>
+  </main>
+
+  <script>
+    const gatewayBase = "https://gateway.kindflower-10870ce1.centralindia.azurecontainerapps.io";
+    const healthUrl = gatewayBase + "/health";
+
+    const gatewayBaseEl = document.getElementById("gatewayBase");
+    const healthUrlEl = document.getElementById("healthUrl");
+    const statusBadge = document.getElementById("statusBadge");
+    const statusText = document.getElementById("statusText");
+    const resultBox = document.getElementById("resultBox");
+    const lastChecked = document.getElementById("lastChecked");
+    const checkBtn = document.getElementById("checkBtn");
+    const copyBtn = document.getElementById("copyBtn");
+
+    gatewayBaseEl.textContent = gatewayBase;
+    healthUrlEl.textContent = healthUrl;
+
+    function setStatus(mode, text) {
+      statusBadge.classList.remove("ok", "err");
+      if (mode === "ok") statusBadge.classList.add("ok");
+      if (mode === "err") statusBadge.classList.add("err");
+      statusText.textContent = text;
+      lastChecked.textContent = new Date().toLocaleString();
+    }
+
+    async function checkHealth() {
+      setStatus("", "Checking...");
+      resultBox.textContent = "Loading...";
+      try {
+        const res = await fetch(healthUrl, { method: "GET" });
+        const text = await res.text();
+        if (res.ok) {
+          setStatus("ok", "Gateway is healthy");
+        } else {
+          setStatus("err", "Gateway returned " + res.status);
+        }
+        resultBox.textContent =
+          "HTTP " + res.status + "\n\n" +
+          text;
+      } catch (err) {
+        setStatus("err", "Request failed");
+        resultBox.textContent = "Error:\n" + err;
+      }
+    }
+
+    checkBtn.addEventListener("click", checkHealth);
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(healthUrl);
+        copyBtn.textContent = "Copied";
+        setTimeout(() => { copyBtn.textContent = "Copy Health URL"; }, 1000);
+      } catch (_) {
+        copyBtn.textContent = "Copy failed";
+        setTimeout(() => { copyBtn.textContent = "Copy Health URL"; }, 1000);
+      }
+    });
+  </script>
+</body>
+</html>
